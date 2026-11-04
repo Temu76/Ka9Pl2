@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Завантаження...</title>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Creepster&display=swap"
+    rel="stylesheet"
+  >
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding: 24px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #000;
+      color: #f00;
+      font-family: "Creepster", cursive;
+      text-align: center;
+      overflow-x: hidden;
+    }
+
+    video.bg {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+      opacity: 0.08;
+      filter: blur(5px) brightness(0.4);
+      pointer-events: none;
+    }
+
+    main {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 650px;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    button {
+      padding: 14px 28px;
+      border: 1px solid #f00;
+      border-radius: 8px;
+      background: #190000;
+      color: #fff;
+      font-family: monospace;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #350000;
+    }
+
+    button:focus-visible {
+      outline: 2px solid white;
+      outline-offset: 5px;
+    }
+
+    .timer {
+      font-size: 4rem;
+      animation: pulse 1s infinite;
+    }
+
+    .loading {
+      margin-top: 10px;
+      color: #ff5722;
+      font-size: 1.5rem;
+      animation: flicker 1.5s infinite;
+    }
+
+    .scary-text {
+      min-height: 3em;
+      margin-top: 15px;
+      color: #ff3b3b;
+      font-family: monospace;
+      font-size: 1.2rem;
+      font-style: italic;
+    }
+
+    .message {
+      margin-top: 30px;
+      color: #fff;
+      font-family: monospace;
+      font-size: 1.5rem;
+      overflow-wrap: anywhere;
+      animation: glitch 1s infinite;
+    }
+
+    .scan-line {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: red;
+      opacity: 0.4;
+      z-index: 1;
+      pointer-events: none;
+      animation: scan 3s linear infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    @keyframes flicker {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    @keyframes glitch {
+      0%, 100% { transform: translate(0); }
+      20% { transform: translate(-2px, 2px); }
+      40% { transform: translate(2px, -2px); }
+      60% { transform: translate(-1px, 1px); }
+      80% { transform: translate(1px, -1px); }
+    }
+
+    @keyframes scan {
+      from { top: 0; }
+      to { top: 100%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+      }
+
+      video.bg,
+      .scan-line {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <video class="bg" autoplay muted loop playsinline aria-hidden="true">
+    <source
+      src="https://cdn.pixabay.com/vimeo/693834150/darkness-109765.mp4?width=1280&hash=f103c6e25eea248c8b98fae13e0a0a4a52565a6b"
+      type="video/mp4"
+    >
+  </video>
+
+  <div class="scan-line" id="scanLine" hidden aria-hidden="true"></div>
+
+  <main>
+    <button id="startButton" type="button">Почати</button>
+
+    <div id="loadingScreen" hidden>
+      <div class="timer" id="timer">20</div>
+      <div class="loading">Завантаження почато...</div>
+      <div class="scary-text" id="scaryText"></div>
+    </div>
+
+    <div class="message" id="message" role="status" hidden></div>
+  </main>
+
+  <audio
+    id="scareSound"
+    preload="auto"
+    src="https://cdn.pixabay.com/download/audio/2023/03/30/audio_6497d4d7df.mp3?filename=horror-whisper-145039.mp3"
+  ></audio>
+
+  <script>
+    const scaryMessages = [
+      "Під'єднуємось до вашого IP...",
+      "Скануємо вашу інформацію...",
+      "Визначаємо місце розташування...",
+      "Отримуємо доступ до камери...",
+      "Аналізуємо активність...",
+      "Невідомі файли в системі...",
+      "Ваш час спливає..."
+    ];
+
+    const funnyMessages = [
+      "Ти! Позаду!! Не озирайся!",
+      "Скоріше, зачиняй двері, воно близько, хоча двері тебе не врятують..",
+      "Хтось вже на твоїй вулиці..",
+      "Озирнешся-помреш",
+      "Не озирайся. Воно вже стоїть занадто близько, щоб ти встиг втекти"
+    ];
+
+    const startButton = document.getElementById("startButton");
+    const loadingScreen = document.getElementById("loadingScreen");
+    const timerElement = document.getElementById("timer");
+    const scaryTextElement = document.getElementById("scaryText");
+    const messageElement = document.getElementById("message");
+    const scanLine = document.getElementById("scanLine");
+    const scareSound = document.getElementById("scareSound");
+
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    );
+
+    const duration = 20;
+    let finished = false;
+
+    startButton.addEventListener("click", () => {
+      startButton.hidden = true;
+      loadingScreen.hidden = false;
+      scanLine.hidden = false;
+
+      timerElement.textContent = duration;
+      scaryTextElement.textContent = scaryMessages[0];
+
+      // Пробуємо дозволити звук під час натискання.
+      // Помилка завантаження аудіо не зупинить таймер.
+      scareSound.volume = 0;
+
+      scareSound.play()
+        .then(() => {
+          if (!finished) {
+            scareSound.pause();
+            scareSound.currentTime = 0;
+          }
+          scareSound.volume = 1;
+        })
+        .catch(() => {
+          scareSound.volume = 1;
+        });
+
+      const startedAt = Date.now();
+
+      const countdown = setInterval(() => {
+        const elapsed = (Date.now() - startedAt) / 1000;
+        const remaining = Math.max(0, Math.ceil(duration - elapsed));
+
+        timerElement.textContent = remaining;
+
+        const textIndex = Math.min(
+          Math.floor(elapsed / 3),
+          scaryMessages.length - 1
+        );
+
+        scaryTextElement.textContent = scaryMessages[textIndex];
+
+        if (!reducedMotion.matches) {
+          document.body.style.backgroundColor =
+            remaining % 2 === 0 ? "#000000" : "#330000";
+        }
+
+        if (remaining === 0) {
+          clearInterval(countdown);
+          finished = true;
+
+          loadingScreen.hidden = true;
+          scanLine.hidden = true;
+          document.body.style.backgroundColor = "#000000";
+
+          const randomIndex = Math.floor(
+            Math.random() * funnyMessages.length
+          );
+
+          messageElement.textContent = funnyMessages[randomIndex];
+          messageElement.hidden = false;
+
+          scareSound.volume = 1;
+          scareSound.currentTime = 0;
+
+          scareSound.play().catch(() => {
+            // Якщо звук недоступний, повідомлення все одно з'явиться.
+          });
+        }
+      }, 200);
+    }, { once: true });
+  </script>
+</body>
+</html>
