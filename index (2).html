@@ -109,11 +109,11 @@
       left: 0;
       width: 100%;
       height: 2px;
-      background: red;
+      background: green;
       opacity: 0.4;
       z-index: 1;
       pointer-events: none;
-      animation: scan 3s linear infinite;
+      animation: scan 0s linear infinite;
     }
 
     @keyframes pulse {
@@ -134,20 +134,13 @@
       80% { transform: translate(1px, -1px); }
     }
 
-    @keyframes scan {
-      from { top: 0; }
-      to { top: 100%; }
-    }
+    
 
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation: none !important;
       }
 
-      video.bg,
-      .scan-line {
-        display: none;
-      }
     }
   </style>
 </head>
@@ -159,8 +152,6 @@
       type="video/mp4"
     >
   </video>
-
-  <div class="scan-line" id="scanLine" hidden aria-hidden="true"></div>
 
   <main>
     <button id="startButton" type="button">Почати</button>
@@ -183,20 +174,20 @@
   <script>
     const scaryMessages = [
       "Попередження!!!",
-      "Ваш телефон взірветься",
+      "Ваш телефон вибухає",
       "Ваш телефон перегрітий",
-      "Ваш телефон взірветься",
+      "Ваш телефон вибухає",
       "Ваш телефон прегрітий,
-      "Ваш телефон взірветься",
+      "Ваш телефон вибухає",
       "Ваш час спливає..."
     ];
 
     const funnyMessages = [
-      "Ти! Позаду!! Не озирайся!",
-      "Скоріше, зачиняй двері, воно близько, хоча двері тебе не врятують..",
-      "Хтось вже на твоїй вулиці..",
-      "Озирнешся-помреш",
-      "Не озирайся. Воно вже стоїть занадто близько, щоб ти встиг втекти"
+      "Т..е.ле..фон. вбух",
+      "Скоріше..",
+      "Ваш телефон вибухає",
+      "Вибух...",
+      "Ось Ось буде вибух!!"
     ];
 
     const startButton = document.getElementById("startButton");
